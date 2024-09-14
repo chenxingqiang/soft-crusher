@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/yourusername/soft-crusher/internal/config"
-	"github.com/yourusername/soft-crusher/pkg/logging"
+	"github.com/chenxingqiang/soft-crusher/internal/config"
+	"github.com/chenxingqiang/soft-crusher/pkg/logging"
 	"go.uber.org/zap"
 )
 

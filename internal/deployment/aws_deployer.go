@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/yourusername/soft-crusher/internal/config"
-	"github.com/yourusername/soft-crusher/pkg/logging"
+	"github.com/chenxingqiang/soft-crusher/internal/config"
+	"github.com/chenxingqiang/soft-crusher/pkg/logging"
 	"go.uber.org/zap"
 )
 
@@ -95,8 +95,8 @@ import (
 
 	"cloud.google.com/go/container/apiv1"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
-	"github.com/yourusername/soft-crusher/internal/config"
-	"github.com/yourusername/soft-crusher/pkg/logging"
+	"github.com/chenxingqiang/soft-crusher/internal/config"
+	"github.com/chenxingqiang/soft-crusher/pkg/logging"
 	"go.uber.org/zap"
 )
 

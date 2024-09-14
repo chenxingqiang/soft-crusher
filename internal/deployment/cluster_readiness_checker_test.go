@@ -5,8 +5,8 @@ package deployment
 import (
 	"testing"
 
+	"github.com/chenxingqiang/soft-crusher/internal/config"
 	"github.com/stretchr/testify/assert"
-	"github.com/yourusername/soft-crusher/internal/config"
 )
 
 func TestClusterReadinessChecker(t *testing.T) {

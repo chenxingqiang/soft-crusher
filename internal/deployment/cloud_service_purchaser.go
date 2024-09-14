@@ -6,13 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aliyun/alibaba-cloud-sdk-go/sdk"
-	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/yourusername/soft-crusher/internal/config"
-	"github.com/yourusername/soft-crusher/pkg/logging"
+	"github.com/chenxingqiang/soft-crusher/pkg/logging"
 	"go.uber.org/zap"
 )
 
