@@ -5,7 +5,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,7 +15,6 @@ import (
 	"github.com/chenxingqiang/soft-crusher/internal/config"
 	"github.com/chenxingqiang/soft-crusher/internal/dashboard"
 	"github.com/chenxingqiang/soft-crusher/internal/deployment"
-	"github.com/chenxingqiang/soft-crusher/internal/plugin"
 	"github.com/chenxingqiang/soft-crusher/pkg/logging"
 	"go.uber.org/zap"
 )
