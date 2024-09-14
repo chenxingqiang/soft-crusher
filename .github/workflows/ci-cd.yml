@@ -1,0 +1,63 @@
+# File: .github/workflows/ci-cd.yml
+
+name: CI/CD
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Go
+              uses: actions/setup-go@v2
+              with:
+                  go-version: 1.17
+            - name: Test
+              run: go test -v ./...
+
+    build:
+        needs: test
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Go
+              uses: actions/setup-go@v2
+              with:
+                  go-version: 1.17
+            - name: Build
+              run: go build -v ./...
+            - name: Build frontend
+              run: |
+                  cd frontend
+                  npm install
+                  npm run build
+
+    deploy:
+        needs: build
+        runs-on: ubuntu-latest
+        if: github.ref == 'refs/heads/main'
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Go
+              uses: actions/setup-go@v2
+              with:
+                  go-version: 1.17
+            - name: Build and push Docker image
+              env:
+                  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+                  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+              run: |
+                  docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+                  docker build -t chenxingqiang/soft-crusher:latest .
+                  docker push chenxingqiang/soft-crusher:latest
+            - name: Deploy to Kubernetes
+              env:
+                  KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+              run: |
+                  echo "$KUBE_CONFIG" > kubeconfig
+                  kubectl --kubeconfig=kubeconfig apply -f k8s/
