@@ -1,9 +1,13 @@
 package analyzer
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFunctionAnalyzer(t *testing.T) {
@@ -91,7 +95,7 @@ func TestFunctionAnalyzer(t *testing.T) {
 					Name: "process",
 					Parameters: []ParameterInfo{
 						{Name: "data", Type: "map[string][]int"},
-						{Name: "callback", Type: "func()"},
+						{Name: "callback", Type: "func(int) bool"},
 					},
 					Results: []ParameterInfo{
 						{Name: "result", Type: "*string"},
@@ -100,12 +104,55 @@ func TestFunctionAnalyzer(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Multiple functions",
+			code: `
+				package main
+				func foo() {}
+				func bar(x int) string { return "" }
+				func (s *Service) baz(y float64) (bool, error) { return false, nil }
+			`,
+			expected: []FunctionInfo{
+				{
+					Name: "foo",
+				},
+				{
+					Name: "bar",
+					Parameters: []ParameterInfo{
+						{Name: "x", Type: "int"},
+					},
+					Results: []ParameterInfo{
+						{Type: "string"},
+					},
+				},
+				{
+					Name:     "baz",
+					Receiver: "*Service",
+					IsMethod: true,
+					Parameters: []ParameterInfo{
+						{Name: "y", Type: "float64"},
+					},
+					Results: []ParameterInfo{
+						{Type: "bool"},
+						{Type: "error"},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tempFile, err := ioutil.TempFile("", "test_*.go")
+			require.NoError(t, err)
+			defer os.Remove(tempFile.Name())
+
+			_, err = tempFile.Write([]byte(tc.code))
+			require.NoError(t, err)
+			tempFile.Close()
+
 			analyzer := NewFunctionAnalyzer()
-			err := analyzer.AnalyzeFile("test.go")
+			err = analyzer.AnalyzeFile(tempFile.Name())
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expected, analyzer.Functions)
 		})
@@ -113,8 +160,62 @@ func TestFunctionAnalyzer(t *testing.T) {
 }
 
 func TestAnalyzeDirectory(t *testing.T) {
-	// Create a temporary directory with some Go files
-	// Run AnalyzeDirectory on this temporary directory
-	// Assert that all files are analyzed correctly
-	// Clean up the temporary directory
+	// Create a temporary directory
+	tempDir, err := ioutil.TempDir("", "test_analyzer")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
+
+	// Create test files
+	files := map[string]string{
+		"file1.go": `
+			package main
+			func foo() {}
+			func bar(x int) string { return "" }
+		`,
+		"file2.go": `
+			package main
+			func (s *Service) baz(y float64) (bool, error) { return false, nil }
+		`,
+		"ignored.txt": "This file should be ignored",
+	}
+
+	for filename, content := range files {
+		err := ioutil.WriteFile(filepath.Join(tempDir, filename), []byte(content), 0644)
+		require.NoError(t, err)
+	}
+
+	// Run AnalyzeDirectory
+	analyzer := NewFunctionAnalyzer()
+	err = analyzer.AnalyzeDirectory(tempDir)
+	assert.NoError(t, err)
+
+	// Check results
+	expected := []FunctionInfo{
+		{
+			Name: "foo",
+		},
+		{
+			Name: "bar",
+			Parameters: []ParameterInfo{
+				{Name: "x", Type: "int"},
+			},
+			Results: []ParameterInfo{
+				{Type: "string"},
+			},
+		},
+		{
+			Name:     "baz",
+			Receiver: "*Service",
+			IsMethod: true,
+			Parameters: []ParameterInfo{
+				{Name: "y", Type: "float64"},
+			},
+			Results: []ParameterInfo{
+				{Type: "bool"},
+				{Type: "error"},
+			},
+		},
+	}
+
+	assert.ElementsMatch(t, expected, analyzer.Functions)
 }

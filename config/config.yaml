@@ -1,0 +1,50 @@
+# Soft-Crusher Configuration
+
+# Server settings
+server:
+  port: 8080
+  host: localhost
+
+# Database settings
+database:
+  type: mongodb
+  url: mongodb://localhost:27017
+  name: soft_crusher
+
+# API settings
+api:
+  version: v1
+  prefix: /api
+
+# Authentication settings
+auth:
+  jwt_secret: your_jwt_secret_here
+  token_expiration: 24h
+
+# Logging settings
+logging:
+  level: info
+  file: logs/soft_crusher.log
+
+# Plugin settings
+plugins:
+  enabled: true
+  directory: plugins/
+
+# Deployment settings
+deployment:
+  cloud_provider: aws
+  region: us-west-2
+
+# Frontend settings
+frontend:
+  build_directory: frontend/build
+
+test:
+  database:
+    url: "mongodb://localhost:27017"
+    name: "soft_crusher_test"
+  server:
+    port: 8081
+  logging:
+    level: "debug"

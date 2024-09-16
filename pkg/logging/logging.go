@@ -7,6 +7,7 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
@@ -15,7 +16,7 @@ var (
 )
 
 // InitLogger initializes the global logger
-func InitLogger(debug bool) {
+func InitLogger(debug bool, logFile string) {
 	once.Do(func() {
 		var cfg zap.Config
 		if debug {
@@ -30,6 +31,21 @@ func InitLogger(debug bool) {
 			panic(err)
 		}
 	})
+
+	if logFile != "" {
+		w := zapcore.AddSync(&lumberjack.Logger{
+			Filename:   logFile,
+			MaxSize:    500, // megabytes
+			MaxBackups: 3,
+			MaxAge:     28, // days
+		})
+		core := zapcore.NewCore(
+			zapcore.NewJSONEncoder(cfg.EncoderConfig),
+			w,
+			cfg.Level,
+		)
+		logger = zap.New(core)
+	}
 }
 
 // SetLogger sets a custom logger
@@ -70,4 +86,9 @@ func With(fields ...zap.Field) *zap.Logger {
 // Sync flushes any buffered log entries
 func Sync() error {
 	return logger.Sync()
+}
+
+// GetLogger returns the current logger instance
+func GetLogger() *zap.Logger {
+	return logger
 }

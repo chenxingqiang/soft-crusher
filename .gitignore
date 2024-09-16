@@ -18,12 +18,24 @@
 go.work
 
 # IDE-specific files
-.vscode/
 .idea/
+.vscode/
 
-# Generated files
-generated_*
-swagger.json
-Dockerfile
-kubernetes-manifests.yaml
-docker-compose.yaml
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Build output
+/soft-crusher
+
+# Logs
+*.log
+
+# Environment variables
+.env
+
+# Node modules (for frontend)
+frontend/node_modules/
+
+# Build files (for frontend)
+frontend/build/

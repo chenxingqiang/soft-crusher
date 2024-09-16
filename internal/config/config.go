@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
+
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"io"
 )
 
 type Config struct {
@@ -34,7 +34,7 @@ type Config struct {
 }
 
 func LoadConfig(filename string) (*Config, error) {
-	bytes, err := ioutil.ReadFile(filename)
+	bytes, err := io.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error reading config file: %v", err)
 	}

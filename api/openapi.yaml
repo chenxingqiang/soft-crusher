@@ -1,0 +1,113 @@
+openapi: 3.0.0
+info:
+  title: Soft-Crusher API
+  version: 1.0.0
+  description: API for automatically generating APIs from Go functions
+
+paths:
+  /api/v1/analyze:
+    post:
+      summary: Analyze source code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                source_code:
+                  type: string
+      responses:
+        '200':
+          description: Successful analysis
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  functions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        parameters:
+                          type: array
+                          items:
+                            type: string
+                        return_type:
+                          type: string
+
+  /api/v1/generate:
+    post:
+      summary: Generate API from analyzed functions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                functions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      parameters:
+                        type: array
+                        items:
+                          type: string
+                      return_type:
+                        type: string
+      responses:
+        '200':
+          description: Successful API generation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_code:
+                    type: string
+                  documentation:
+                    type: string
+
+  /api/v1/deploy:
+    post:
+      summary: Deploy generated API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                api_code:
+                  type: string
+                deployment_config:
+                  type: object
+      responses:
+        '200':
+          description: Successful deployment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployment_url:
+                    type: string
+                  status:
+                    type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

@@ -8,6 +8,35 @@ import (
 	"strings"
 )
 
+type ErrorCode int
+
+const (
+	ErrUnknown ErrorCode = iota
+	ErrNotFound
+	ErrInvalidInput
+	ErrDatabaseError
+	// Add more error codes as needed
+)
+
+type Error struct {
+	Err        error
+	Message    string
+	StackTrace string
+	Code       ErrorCode
+}
+
+func NewWithCode(message string, code ErrorCode) *Error {
+	return &Error{
+		Message:    message,
+		StackTrace: getStackTrace(),
+		Code:       code,
+	}
+}
+
+func (e *Error) GetCode() ErrorCode {
+	return e.Code
+}
+
 // Error represents a custom error type with stack trace
 type Error struct {
 	Err        error
@@ -19,6 +48,14 @@ type Error struct {
 func New(message string) *Error {
 	return &Error{
 		Message:    message,
+		StackTrace: getStackTrace(),
+	}
+}
+
+// Newf creates a new Error with formatted message
+func Newf(format string, args ...interface{}) *Error {
+	return &Error{
+		Message:    fmt.Sprintf(format, args...),
 		StackTrace: getStackTrace(),
 	}
 }
@@ -81,4 +118,9 @@ func As(err error, target interface{}) bool {
 		}
 	}
 	return false
+}
+
+// GetStackTrace returns the stack trace
+func (e *Error) GetStackTrace() string {
+	return e.StackTrace
 }
