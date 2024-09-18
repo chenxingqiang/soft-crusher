@@ -1,5 +1,3 @@
-// File: internal/auth/jwt.go
-
 package auth
 
 import (
@@ -8,11 +6,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/chenxingqiang/soft-crusher/pkg/errors"
-	"github.com/chenxingqiang/soft-crusher/pkg/logging"
 	"github.com/dgrijalva/jwt-go"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/chenxingqiang/soft-crusher/internal/models"
+	"github.com/chenxingqiang/soft-crusher/pkg/logging"
 )
 
 var jwtKey = []byte("your-secret-key") // In production, use a secure method to manage this key
@@ -20,6 +19,11 @@ var jwtKey = []byte("your-secret-key") // In production, use a secure method to 
 type Claims struct {
 	Username string `json:"username"`
 	jwt.StandardClaims
+}
+
+// Mock user database (replace with actual database in production)
+var users = map[string]string{
+	"admin": "$2a$10$XOPbrlUPQdwdJUpSrIF6X.LbE14qsMmKGhM1A8W9iqDuy0Bx8KmbG", // "password"
 }
 
 func GenerateToken(username string) (string, error) {
@@ -56,13 +60,13 @@ func JWTMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("Authorization")
 		if tokenString == "" {
-			errors.RespondWithError(w, http.StatusUnauthorized, "Missing authorization token")
+			http.Error(w, "Missing authorization token", http.StatusUnauthorized)
 			return
 		}
 
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
-			errors.RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
+			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 			return
 		}
 
@@ -72,32 +76,29 @@ func JWTMiddleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	var creds struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
+	var creds models.Credentials
 
 	err := json.NewDecoder(r.Body).Decode(&creds)
 	if err != nil {
-		errors.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
 	hashedPassword, found := users[creds.Username]
 	if !found {
-		errors.RespondWithError(w, http.StatusUnauthorized, "Invalid credentials")
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(creds.Password))
 	if err != nil {
-		errors.RespondWithError(w, http.StatusUnauthorized, "Invalid credentials")
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
 	token, err := GenerateToken(creds.Username)
 	if err != nil {
-		errors.HandleError(w, err, "Failed to generate token")
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
 	}
 

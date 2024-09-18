@@ -37,13 +37,6 @@ func (e *Error) GetCode() ErrorCode {
 	return e.Code
 }
 
-// Error represents a custom error type with stack trace
-type Error struct {
-	Err        error
-	Message    string
-	StackTrace string
-}
-
 // New creates a new Error
 func New(message string) *Error {
 	return &Error{

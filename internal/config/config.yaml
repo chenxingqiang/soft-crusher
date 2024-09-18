@@ -1,0 +1,57 @@
+server:
+  port: 8080
+  debug: false
+
+logging:
+  level: info
+  file: "logs/soft-crusher.log"
+  output_paths:
+    - "stdout"
+    - "logs/console.log"
+
+# Database configuration
+database:
+  type: mongodb
+  uri: "mongodb://localhost:27017"
+  name: "soft-crusher"
+
+# Authentication configuration
+auth:
+  jwt_secret: "your-secret-key-here"
+  token_expiration: 24h
+
+# Deployment configuration
+deployment:
+  target: kubernetes  # Options: kubernetes, aws, gcp
+  plugin_dir: "./plugins"
+
+# Cloud provider configuration
+cloud:
+  provider: aws  # Options: aws, gcp, azure
+  region: us-west-2
+  cluster_name: "soft-crusher-cluster"
+  node_count: 3
+
+# AWS specific configuration (if using AWS)
+aws:
+  access_key_id: "your-access-key-id"
+  secret_access_key: "your-secret-access-key"
+
+# GCP specific configuration (if using GCP)
+gcp:
+  project_id: "your-project-id"
+  credentials_file: "/path/to/your/credentials.json"
+
+# Kubernetes specific configuration
+kubernetes:
+  namespace: "soft-crusher"
+  service_account: "soft-crusher-sa"
+
+# Plugin configuration
+plugins:
+  enabled: true
+  directory: "./plugins"
+
+# Frontend configuration
+frontend:
+  build_dir: "./frontend/build"

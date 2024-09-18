@@ -1,5 +1,3 @@
-// File: cmd/soft-crusher/main.go
-
 package main
 
 import (
@@ -15,22 +13,30 @@ import (
 	"github.com/chenxingqiang/soft-crusher/internal/config"
 	"github.com/chenxingqiang/soft-crusher/internal/dashboard"
 	"github.com/chenxingqiang/soft-crusher/internal/deployment"
+	"github.com/chenxingqiang/soft-crusher/internal/plugins"
 	"github.com/chenxingqiang/soft-crusher/pkg/logging"
 	"go.uber.org/zap"
 )
 
 func main() {
-	// Initialize logger
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
-	logging.SetLogger(logger)
-
 	// Load configuration
-	cfg, err := config.LoadConfig("config.yaml")
+	cfg, err := config.LoadConfig("/config/config.yaml")
 	if err != nil {
-		logging.Fatal("Failed to load configuration", zap.Error(err))
+		panic("Failed to load configuration: " + err.Error())
 	}
 
+	// Initialize logger
+	logging.InitLogger(cfg.IsDebugMode(), cfg.GetLogFile(), cfg.GetOutputPaths())
+	defer logging.Sync()
+
+	logger := logging.GetLogger()
+
+	// Use other configuration values
+	logger.Info("Starting server",
+		zap.Int("port", cfg.GetServerPort()),
+		zap.String("deployment_target", cfg.GetDeploymentTarget()),
+		zap.String("cloud_provider", cfg.GetCloudProvider()),
+	)
 	// Initialize components
 	dashboard.Init()
 	pluginManager := initializePluginManager(cfg)
@@ -49,9 +55,9 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		logging.Info("Starting server on :8080")
+		logger.Info("Starting server on :8080")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logging.Fatal("Failed to start server", zap.Error(err))
+			logger.Fatal("Failed to start server", zap.Error(err))
 		}
 	}()
 
@@ -59,15 +65,15 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	logging.Info("Shutting down server...")
+	logger.Info("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		logging.Fatal("Server forced to shutdown", zap.Error(err))
+		logger.Fatal("Server forced to shutdown", zap.Error(err))
 	}
 
-	logging.Info("Server exiting")
+	logger.Info("Server exiting")
 }
 
 func initializePluginManager(cfg *config.Config) *plugin.PluginManager {

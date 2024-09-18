@@ -1,5 +1,3 @@
-// File: pkg/logging/logging.go
-
 package logging
 
 import (
@@ -16,7 +14,7 @@ var (
 )
 
 // InitLogger initializes the global logger
-func InitLogger(debug bool, logFile string) {
+func InitLogger(debug bool, logFile string, outputPaths []string) {
 	once.Do(func() {
 		var cfg zap.Config
 		if debug {
@@ -25,27 +23,38 @@ func InitLogger(debug bool, logFile string) {
 		} else {
 			cfg = zap.NewProductionConfig()
 		}
-		var err error
-		logger, err = cfg.Build()
-		if err != nil {
-			panic(err)
-		}
-	})
 
-	if logFile != "" {
-		w := zapcore.AddSync(&lumberjack.Logger{
-			Filename:   logFile,
-			MaxSize:    500, // megabytes
-			MaxBackups: 3,
-			MaxAge:     28, // days
-		})
-		core := zapcore.NewCore(
-			zapcore.NewJSONEncoder(cfg.EncoderConfig),
-			w,
+		var cores []zapcore.Core
+
+		// Add file logger if logFile is specified
+		if logFile != "" {
+			w := zapcore.AddSync(&lumberjack.Logger{
+				Filename:   logFile,
+				MaxSize:    500, // megabytes
+				MaxBackups: 3,
+				MaxAge:     28, // days
+			})
+			fileCore := zapcore.NewCore(
+				zapcore.NewJSONEncoder(cfg.EncoderConfig),
+				w,
+				cfg.Level,
+			)
+			cores = append(cores, fileCore)
+		}
+
+		// Add console logger and any additional output paths
+		var consoleWriteSyncer zapcore.WriteSyncer
+		consoleWriteSyncer, _, _ = zap.Open(outputPaths...)
+		consoleCore := zapcore.NewCore(
+			zapcore.NewConsoleEncoder(cfg.EncoderConfig),
+			consoleWriteSyncer,
 			cfg.Level,
 		)
+		cores = append(cores, consoleCore)
+
+		core := zapcore.NewTee(cores...)
 		logger = zap.New(core)
-	}
+	})
 }
 
 // SetLogger sets a custom logger

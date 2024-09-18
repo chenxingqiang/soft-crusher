@@ -6,11 +6,73 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/chenxingqiang/soft-crusher/internal/config"
 	"github.com/chenxingqiang/soft-crusher/pkg/logging"
 	"go.uber.org/zap"
 )
 
-// ... existing code ...
+// Similar definition for Deployer
+type Deployer struct {
+	Config *config.Config
+}
+
+type CloudServicePurchaser struct {
+	Config *config.Config
+}
+
+func NewCloudServicePurchaser(cfg *config.Config) *CloudServicePurchaser {
+	return &CloudServicePurchaser{Config: cfg}
+}
+
+func (csp *CloudServicePurchaser) PurchaseCloudService() error {
+	logging.Info("Starting cloud service purchase",
+		zap.String("provider", csp.Config.Provider),
+		zap.String("clusterName", csp.Config.ClusterName))
+
+	start := time.Now()
+	var err error
+
+	switch csp.Config.Provider {
+	case "aliyun":
+		err = csp.purchaseAliyunACK()
+	case "aws":
+		err = csp.purchaseAWSECS()
+	default:
+		err = fmt.Errorf("unsupported cloud provider: %s", csp.Config.Provider)
+	}
+
+	duration := time.Since(start)
+
+	if err != nil {
+		logging.Error("Failed to purchase cloud service",
+			zap.Error(err),
+			zap.Duration("duration", duration))
+		return fmt.Errorf("failed to purchase cloud service: %w", err)
+	}
+
+	logging.Info("Successfully purchased cloud service",
+		zap.Duration("duration", duration))
+	return nil
+}
+
+func (csp *CloudServicePurchaser) purchaseAliyunACK() error {
+	// Define response here or make sure it is passed correctly
+	response, err := csp.someNetworkRequestFunction()
+	if err != nil {
+		return fmt.Errorf("failed to make request: %w", err)
+	}
+
+	if response.GetHttpStatus() != 200 {
+		return fmt.Errorf("Aliyun API returned non-200 status: %d, content: %s",
+			response.GetHttpStatus(), response.GetHttpContentString())
+	}
+
+	return nil
+}
+
+func NewDeployer(cfg *config.Config) *Deployer {
+	return &Deployer{Config: cfg}
+}
 
 func (csp *CloudServicePurchaser) PurchaseCloudService() error {
 	logging.Info("Starting cloud service purchase",
@@ -40,6 +102,21 @@ func (csp *CloudServicePurchaser) PurchaseCloudService() error {
 
 	logging.Info("Successfully purchased cloud service",
 		zap.Duration("duration", duration))
+	return nil
+}
+
+func (csp *CloudServicePurchaser) purchaseAliyunACK() error {
+	// Define response here or make sure it is passed correctly
+	response, err := csp.someNetworkRequestFunction()
+	if err != nil {
+		return fmt.Errorf("failed to make request: %w", err)
+	}
+
+	if response.GetHttpStatus() != 200 {
+		return fmt.Errorf("Aliyun API returned non-200 status: %d, content: %s",
+			response.GetHttpStatus(), response.GetHttpContentString())
+	}
+
 	return nil
 }
 

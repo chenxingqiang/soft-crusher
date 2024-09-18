@@ -2,9 +2,10 @@
 
 Go-Soft-Crusher is a tool for automatically generating APIs from Go functions, including documentation, tests, and deployment configurations.
 
-### Soft-Crusher: API Service Automation Project
+## Soft-Crusher: API Service Automation Project
 
 ### Project Overview
+
 Soft-Crusher is a tool designed to automatically transform software functions into API services. It analyzes existing software, identifies functions, and generates an API layer to expose these functions as web services.
 
 ## Key Components
